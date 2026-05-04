@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.10] - 2026-05-04
+
+### Changed
+
+- **deps**: update dependencies (#39)
+
+### Fixed
+
+- **deps**: bump release
+
 ## [0.5.9] - 2026-04-26
 
 ### Fixed
@@ -151,7 +161,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial release with `web_search` tool using Tavily
 
-[unreleased]: https://github.com/shaftoe/pi-tavily-tools/compare/v0.5.9...HEAD
+[unreleased]: https://github.com/shaftoe/pi-tavily-tools/compare/v0.5.10...HEAD
+[0.5.10]: https://github.com/shaftoe/pi-tavily-tools/compare/v0.5.9...v0.5.10
 [0.5.9]: https://github.com/shaftoe/pi-tavily-tools/compare/v0.5.8...v0.5.9
 [0.5.8]: https://github.com/shaftoe/pi-tavily-tools/compare/v0.5.7...v0.5.8
 [0.5.7]: https://github.com/shaftoe/pi-tavily-tools/compare/v0.5.6...v0.5.7
