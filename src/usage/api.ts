@@ -97,9 +97,11 @@ export interface TavilyUsageData {
 
 /**
  * Fetch Tavily usage data from the API
+ * @returns {Promise<TavilyUsageData | undefined>} Usage data or undefined if API returns empty/invalid response
  * @throws {Error} If the API key is missing, the request fails, or the response is malformed
+ * @note Tavily may return 202 with empty body for valid keys without usage history yet
  */
-export async function getTavilyUsage(apiKey: string): Promise<TavilyUsageData> {
+export async function getTavilyUsage(apiKey: string): Promise<TavilyUsageData | undefined> {
   if (!apiKey) {
     throw new Error(
       "TAVILY_API_KEY is not set. " + 'Please set it with: export TAVILY_API_KEY="your-api-key"'
@@ -121,7 +123,20 @@ export async function getTavilyUsage(apiKey: string): Promise<TavilyUsageData> {
     throw new Error(`Tavily usage API request failed with status ${response.status}`);
   }
 
-  const data = (await response.json()) as TavilyUsageResponse;
+  const body = await response.text();
+
+  // Tavily sometimes returns 202 Accepted with empty body (no usage data yet)
+  if (!body) {
+    return undefined;
+  }
+
+  let data: TavilyUsageResponse;
+  try {
+    data = JSON.parse(body) as TavilyUsageResponse;
+  } catch {
+    // Non-JSON response (e.g., HTML from a proxy) — skip silently
+    return undefined;
+  }
 
   if (!data.account || typeof data.account.plan_usage !== "number") {
     throw new Error("Unexpected Tavily usage API response: missing account usage data");

@@ -41,7 +41,7 @@ describe("getTavilyUsage", () => {
     mockFetch = mock(() =>
       Promise.resolve({
         ok: true,
-        json: async () => structuredClone(mockUsageResponse),
+        text: async () => JSON.stringify(structuredClone(mockUsageResponse)),
       } as Response)
     );
     global.fetch = mockFetch as unknown as typeof fetch;
@@ -73,7 +73,10 @@ describe("getTavilyUsage", () => {
 
   test("should throw an error when account section is missing", async () => {
     mockFetch.mockImplementationOnce(() =>
-      Promise.resolve({ ok: true, json: async () => ({ key: mockUsageResponse.key }) } as Response)
+      Promise.resolve({
+        ok: true,
+        text: async () => JSON.stringify({ key: mockUsageResponse.key }),
+      } as Response)
     );
 
     expect(getTavilyUsage("test-key")).rejects.toThrow(
@@ -85,9 +88,10 @@ describe("getTavilyUsage", () => {
     mockFetch.mockImplementationOnce(() =>
       Promise.resolve({
         ok: true,
-        json: async () => ({
-          account: { plan_limit: 15000 },
-        }),
+        text: async () =>
+          JSON.stringify({
+            account: { plan_limit: 15000 },
+          }),
       } as Response)
     );
 
@@ -100,9 +104,10 @@ describe("getTavilyUsage", () => {
     mockFetch.mockImplementationOnce(() =>
       Promise.resolve({
         ok: true,
-        json: async () => ({
-          account: { plan_usage: 500 },
-        }),
+        text: async () =>
+          JSON.stringify({
+            account: { plan_usage: 500 },
+          }),
       } as Response)
     );
 
@@ -112,7 +117,7 @@ describe("getTavilyUsage", () => {
   });
 
   test("should return correct usage data from a valid response", async () => {
-    const result = await getTavilyUsage("test-key");
+    const result = (await getTavilyUsage("test-key"))!;
 
     // 500 / (15000 + 100) * 100 = 3.311...
     expect(result.percentage).toBeCloseTo(3.311, 2);
@@ -130,10 +135,10 @@ describe("getTavilyUsage", () => {
     response.account.paygo_usage = 0;
 
     mockFetch.mockImplementationOnce(() =>
-      Promise.resolve({ ok: true, json: async () => response } as Response)
+      Promise.resolve({ ok: true, text: async () => JSON.stringify(response) } as Response)
     );
 
-    const result = await getTavilyUsage("test-key");
+    const result = (await getTavilyUsage("test-key"))!;
 
     expect(result.percentage).toBe(0);
     expect(result.planUsage).toBe(0);
@@ -145,10 +150,10 @@ describe("getTavilyUsage", () => {
     response.account.paygo_usage = response.account.paygo_limit;
 
     mockFetch.mockImplementationOnce(() =>
-      Promise.resolve({ ok: true, json: async () => response } as Response)
+      Promise.resolve({ ok: true, text: async () => JSON.stringify(response) } as Response)
     );
 
-    const result = await getTavilyUsage("test-key");
+    const result = (await getTavilyUsage("test-key"))!;
 
     // 15000 / (15000 + 100) * 100 = 99.3377...
     expect(result.percentage).toBeCloseTo(99.34, 2);
@@ -162,10 +167,10 @@ describe("getTavilyUsage", () => {
     response.account.paygo_limit = 0;
 
     mockFetch.mockImplementationOnce(() =>
-      Promise.resolve({ ok: true, json: async () => response } as Response)
+      Promise.resolve({ ok: true, text: async () => JSON.stringify(response) } as Response)
     );
 
-    const result = await getTavilyUsage("test-key");
+    const result = (await getTavilyUsage("test-key"))!;
 
     // (50 + 0) / (0 + 0 || 1) * 100 = 5000 — falls back to limit of 1
     expect(result.percentage).toBe(5000);
@@ -180,7 +185,7 @@ describe("getTavilyUsage", () => {
       fetchHeaders = options.headers as Record<string, string>;
       return Promise.resolve({
         ok: true,
-        json: async () => structuredClone(mockUsageResponse),
+        text: async () => JSON.stringify(structuredClone(mockUsageResponse)),
       } as Response);
     });
 
@@ -194,16 +199,17 @@ describe("getTavilyUsage", () => {
     mockFetch.mockImplementationOnce(() =>
       Promise.resolve({
         ok: true,
-        json: async () => ({
-          account: {
-            plan_usage: 100,
-            plan_limit: 1000,
-          },
-        }),
+        text: async () =>
+          JSON.stringify({
+            account: {
+              plan_usage: 100,
+              plan_limit: 1000,
+            },
+          }),
       } as Response)
     );
 
-    const result = await getTavilyUsage("test-key");
+    const result = (await getTavilyUsage("test-key"))!;
 
     expect(result.keyUsage).toBe(0);
     expect(result.keyLimit).toBe(0);
@@ -214,18 +220,19 @@ describe("getTavilyUsage", () => {
     mockFetch.mockImplementationOnce(() =>
       Promise.resolve({
         ok: true,
-        json: async () => ({
-          account: {
-            plan_usage: 500,
-            plan_limit: 1000,
-            paygo_usage: 0,
-            paygo_limit: 0,
-          },
-        }),
+        text: async () =>
+          JSON.stringify({
+            account: {
+              plan_usage: 500,
+              plan_limit: 1000,
+              paygo_usage: 0,
+              paygo_limit: 0,
+            },
+          }),
       } as Response)
     );
 
-    const result = await getTavilyUsage("test-key");
+    const result = (await getTavilyUsage("test-key"))!;
 
     expect(result.percentage).toBe(50);
     expect(result.paygoUsage).toBe(0);
@@ -236,18 +243,19 @@ describe("getTavilyUsage", () => {
     mockFetch.mockImplementationOnce(() =>
       Promise.resolve({
         ok: true,
-        json: async () => ({
-          account: {
-            plan_usage: 1018,
-            plan_limit: 1000,
-            paygo_usage: 0,
-            paygo_limit: 5000,
-          },
-        }),
+        text: async () =>
+          JSON.stringify({
+            account: {
+              plan_usage: 1018,
+              plan_limit: 1000,
+              paygo_usage: 0,
+              paygo_limit: 5000,
+            },
+          }),
       } as Response)
     );
 
-    const result = await getTavilyUsage("test-key");
+    const result = (await getTavilyUsage("test-key"))!;
 
     // (1018 + 0) / (1000 + 5000) * 100 = 16.97%
     expect(result.percentage).toBeCloseTo(16.97, 1);
@@ -257,16 +265,17 @@ describe("getTavilyUsage", () => {
     mockFetch.mockImplementationOnce(() =>
       Promise.resolve({
         ok: true,
-        json: async () => ({
-          account: {
-            plan_usage: 200,
-            plan_limit: 1000,
-          },
-        }),
+        text: async () =>
+          JSON.stringify({
+            account: {
+              plan_usage: 200,
+              plan_limit: 1000,
+            },
+          }),
       } as Response)
     );
 
-    const result = await getTavilyUsage("test-key");
+    const result = (await getTavilyUsage("test-key"))!;
 
     expect(result.paygoUsage).toBe(0);
     expect(result.paygoLimit).toBe(0);
@@ -277,18 +286,19 @@ describe("getTavilyUsage", () => {
     mockFetch.mockImplementationOnce(() =>
       Promise.resolve({
         ok: true,
-        json: async () => ({
-          account: {
-            plan_usage: 1000,
-            plan_limit: 1000,
-            paygo_usage: 250,
-            paygo_limit: 1000,
-          },
-        }),
+        text: async () =>
+          JSON.stringify({
+            account: {
+              plan_usage: 1000,
+              plan_limit: 1000,
+              paygo_usage: 250,
+              paygo_limit: 1000,
+            },
+          }),
       } as Response)
     );
 
-    const result = await getTavilyUsage("test-key");
+    const result = (await getTavilyUsage("test-key"))!;
 
     // 1000 / (1000 + 1000) * 100 = 50%
     expect(result.percentage).toBe(50);
@@ -328,6 +338,34 @@ describe("getTavilyUsage", () => {
     const error = await getTavilyUsage("test-key").catch((e) => e);
     expect(error).toBeInstanceOf(RateLimitError);
     expect((error as RateLimitError).retryAfterMs).toBe(DEFAULT_RETRY_AFTER_MS);
+  });
+
+  test("should return undefined when API returns empty body (e.g. 202 Accepted)", async () => {
+    mockFetch.mockImplementationOnce(
+      () =>
+        ({
+          ok: true,
+          status: 202,
+          text: async () => "",
+        }) as unknown as Response
+    );
+
+    const result = await getTavilyUsage("test-key");
+    expect(result).toBeUndefined();
+  });
+
+  test("should return undefined when API returns non-JSON body", async () => {
+    mockFetch.mockImplementationOnce(
+      () =>
+        ({
+          ok: true,
+          status: 200,
+          text: async () => "<html>Not JSON</html>",
+        }) as unknown as Response
+    );
+
+    const result = await getTavilyUsage("test-key");
+    expect(result).toBeUndefined();
   });
 
   test("should parse retry-after header with different values", async () => {

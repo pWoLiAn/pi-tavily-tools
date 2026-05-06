@@ -114,14 +114,14 @@ describe("UsageCache", () => {
       );
     });
 
-    test("should clear status on fetch error", async () => {
+    test("should show N/A on fetch error", async () => {
       const mockCtx = createMockContext();
       const mockFetch = createThrowingFetchUsage("API error");
       const cache = new UsageCache("test-api-key");
 
       await cache.updateStatus(mockCtx, mockFetch);
 
-      expect(mockCtx.ui.setStatus).toHaveBeenCalledWith("tavily-usage", undefined);
+      expect(mockCtx.ui.setStatus).toHaveBeenCalledWith("tavily-usage", "muted:Tavily:accent:N/A");
     });
   });
 
@@ -206,24 +206,24 @@ describe("UsageCache", () => {
   });
 
   describe("error scenarios", () => {
-    test("should clear status on network error", async () => {
+    test("should show N/A on network error", async () => {
       const mockCtx = createMockContext();
       const mockFetch = createThrowingFetchUsage("Network error");
       const cache = new UsageCache("test-api-key");
 
       await cache.updateStatus(mockCtx, mockFetch);
 
-      expect(mockCtx.ui.setStatus).toHaveBeenCalledWith("tavily-usage", undefined);
+      expect(mockCtx.ui.setStatus).toHaveBeenCalledWith("tavily-usage", "muted:Tavily:accent:N/A");
     });
 
-    test("should clear status on API returning 401", async () => {
+    test("should show N/A on API returning 401", async () => {
       const mockCtx = createMockContext();
       const mockFetch = createThrowingFetchUsage("Tavily usage API request failed with status 401");
       const cache = new UsageCache("test-api-key");
 
       await cache.updateStatus(mockCtx, mockFetch);
 
-      expect(mockCtx.ui.setStatus).toHaveBeenCalledWith("tavily-usage", undefined);
+      expect(mockCtx.ui.setStatus).toHaveBeenCalledWith("tavily-usage", "muted:Tavily:accent:N/A");
     });
 
     test("should not throw errors — catch them silently", async () => {
@@ -235,7 +235,7 @@ describe("UsageCache", () => {
       expect(result).toBeUndefined();
     });
 
-    test("should log error to console on fetch error", async () => {
+    test("should not log errors to console", async () => {
       const mockCtx = createMockContext();
       const mockFetch = createThrowingFetchUsage("API request failed");
       const cache = new UsageCache("test-api-key");
@@ -247,11 +247,7 @@ describe("UsageCache", () => {
       try {
         await cache.updateStatus(mockCtx, mockFetch);
 
-        expect(mockConsoleError).toHaveBeenCalledTimes(1);
-        const calls = mockConsoleError.mock.calls as Array<unknown[]>;
-        const errorMessage = String(calls[0]?.[0] ?? "");
-        expect(errorMessage).toContain("Error updating Tavily usage:");
-        expect(errorMessage).toContain("API request failed");
+        expect(mockConsoleError).not.toHaveBeenCalled();
       } finally {
         console.error = originalConsoleError;
       }
@@ -380,11 +376,10 @@ describe("UsageCache", () => {
       const rateLimitFetch = createRateLimitFetchUsage(60000);
       const cache = new UsageCache("test-api-key");
 
-      // Rate limit on first fetch (no cached data)
+      // Rate limit on first fetch (no cached data) — should show N/A
       await cache.updateStatus(mockCtx, rateLimitFetch);
 
-      // Should not set status since there's no cached data
-      expect(mockCtx.ui.setStatus).not.toHaveBeenCalled();
+      expect(mockCtx.ui.setStatus).toHaveBeenCalledWith("tavily-usage", "muted:Tavily:accent:N/A");
     });
 
     test("should exit backoff after backoff period expires", async () => {

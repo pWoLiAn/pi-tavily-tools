@@ -10,7 +10,7 @@ import { Temporal } from "temporal-polyfill";
 import { RateLimitError, getTavilyUsage, type TavilyUsageData } from "./api.js";
 
 /** Fetch usage function signature (same as getTavilyUsage for testability) */
-export type FetchUsageFn = (apiKey: string) => Promise<TavilyUsageData>;
+export type FetchUsageFn = (apiKey: string) => Promise<TavilyUsageData | undefined>;
 
 /** Cache for Tavily usage data to avoid excessive API calls */
 export class UsageCache {
@@ -25,11 +25,16 @@ export class UsageCache {
   }
 
   /** Build and set footer status string from usage data */
-  private setStatusFromUsage(ctx: ExtensionContext, usageData: TavilyUsageData): void {
+  private setStatusFromUsage(ctx: ExtensionContext, usageData: TavilyUsageData | undefined): void {
     const theme = ctx.ui.theme;
-    const displayPercentage = Math.round(usageData.percentage * 10) / 10;
 
-    let status = theme.fg("muted", "Tavily:") + theme.fg("accent", `${displayPercentage}%`);
+    let status: string;
+    if (usageData) {
+      const displayPercentage = Math.round(usageData.percentage * 10) / 10;
+      status = theme.fg("muted", "Tavily:") + theme.fg("accent", `${displayPercentage}%`);
+    } else {
+      status = theme.fg("muted", "Tavily:") + theme.fg("accent", "N/A");
+    }
 
     ctx.ui.setStatus("tavily-usage", status);
   }
@@ -41,11 +46,9 @@ export class UsageCache {
   ): Promise<void> {
     const now = Temporal.Now.instant().epochMilliseconds;
 
-    // Respect rate-limit backoff — use cached data or skip silently
+    // Respect rate-limit backoff — use cached data or show N/A
     if (now < this.backoffUntil) {
-      if (this.lastUsage) {
-        this.setStatusFromUsage(ctx, this.lastUsage);
-      }
+      this.setStatusFromUsage(ctx, this.lastUsage ?? undefined);
       return;
     }
 
@@ -61,6 +64,13 @@ export class UsageCache {
 
     try {
       const usage = await fetchUsage(this.apiKey);
+      if (!usage) {
+        // API returned empty or non-JSON body (e.g. 202 with no data)
+        if (!this.lastUsage) {
+          this.setStatusFromUsage(ctx, undefined);
+        }
+        return;
+      }
       this.lastUsage = usage;
       this.lastFetchTime = now;
 
@@ -68,15 +78,15 @@ export class UsageCache {
     } catch (error) {
       if (error instanceof RateLimitError) {
         this.backoffUntil = now + error.retryAfterMs;
-        // Update lastFetchTime so cooldown period applies after backoff expires
         this.lastFetchTime = now;
-        // Keep last known status instead of clearing
+        this.setStatusFromUsage(ctx, this.lastUsage ?? undefined);
+      } else {
+        // Network/API errors — show N/A if no cached data, otherwise keep cache
         if (this.lastUsage) {
           this.setStatusFromUsage(ctx, this.lastUsage);
+        } else {
+          this.setStatusFromUsage(ctx, undefined);
         }
-      } else {
-        console.error(`Error updating Tavily usage: ${String(error)}`);
-        this.clear(ctx);
       }
     }
   }

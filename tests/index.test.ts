@@ -90,7 +90,7 @@ describe("Extension entry point", () => {
     // Call session_start handler twice — the second call should be a no-op
     const ctx: ExtensionContext = {
       cwd: "/tmp",
-      ui: { setStatus: mock(() => {}) },
+      ui: { setStatus: mock(() => {}), theme: { fg: (_c: string, t: string) => t } },
     } as unknown as ExtensionContext;
     await handlers["session_start"]!({}, ctx);
     await handlers["session_start"]!({}, ctx);
@@ -110,7 +110,7 @@ describe("Extension entry point", () => {
 
     const ctx: ExtensionContext = {
       cwd: "/tmp",
-      ui: { setStatus: mock(() => {}) },
+      ui: { setStatus: mock(() => {}), theme: { fg: (_c: string, t: string) => t } },
     } as unknown as ExtensionContext;
 
     // All handlers should accept (event, ctx) without throwing
