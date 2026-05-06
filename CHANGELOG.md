@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.11] - 2026-05-06
+
+### Fixed
+
+- ignore 202 responses from https://api.tavily.com/usage
+
 ## [0.5.10] - 2026-05-04
 
 ### Changed
@@ -161,7 +167,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial release with `web_search` tool using Tavily
 
-[unreleased]: https://github.com/shaftoe/pi-tavily-tools/compare/v0.5.10...HEAD
+[unreleased]: https://github.com/shaftoe/pi-tavily-tools/compare/v0.5.11...HEAD
+[0.5.11]: https://github.com/shaftoe/pi-tavily-tools/compare/v0.5.10...v0.5.11
 [0.5.10]: https://github.com/shaftoe/pi-tavily-tools/compare/v0.5.9...v0.5.10
 [0.5.9]: https://github.com/shaftoe/pi-tavily-tools/compare/v0.5.8...v0.5.9
 [0.5.8]: https://github.com/shaftoe/pi-tavily-tools/compare/v0.5.7...v0.5.8
