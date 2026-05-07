@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.12] - 2026-05-07
+
+### Fixed
+
+- **deps**: update to @earendil-works namespace (#40)
+
 ## [0.5.11] - 2026-05-06
 
 ### Fixed
@@ -167,7 +173,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial release with `web_search` tool using Tavily
 
-[unreleased]: https://github.com/shaftoe/pi-tavily-tools/compare/v0.5.11...HEAD
+[unreleased]: https://github.com/shaftoe/pi-tavily-tools/compare/v0.5.12...HEAD
+[0.5.12]: https://github.com/shaftoe/pi-tavily-tools/compare/v0.5.11...v0.5.12
 [0.5.11]: https://github.com/shaftoe/pi-tavily-tools/compare/v0.5.10...v0.5.11
 [0.5.10]: https://github.com/shaftoe/pi-tavily-tools/compare/v0.5.9...v0.5.10
 [0.5.9]: https://github.com/shaftoe/pi-tavily-tools/compare/v0.5.8...v0.5.9
