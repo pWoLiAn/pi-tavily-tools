@@ -48,11 +48,11 @@ export default function (pi: ExtensionAPI): void {
     registerWebSearchTool(pi, client);
     registerWebExtractTool(pi, client);
 
-    await usageCache.updateStatus(ctx);
+    usageCache.updateStatus(ctx).catch(() => {});
   });
 
   pi.on("turn_end", async (_event, ctx) => {
-    await usageCache.updateStatus(ctx);
+    usageCache.updateStatus(ctx).catch(() => {});
   });
 
   pi.on("session_shutdown", async (_event, ctx) => {

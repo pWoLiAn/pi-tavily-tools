@@ -1,0 +1,94 @@
+/**
+ * Tavily Usage API Client
+ *
+ * Fetches usage data from the Tavily usage endpoint.
+ * @see https://docs.tavily.com/documentation/api-reference/endpoint/usage
+ */
+const TAVILY_USAGE_API_URL = "https://api.tavily.com/usage";
+/** Default retry-after duration in milliseconds (5 minutes) */
+export const DEFAULT_RETRY_AFTER_MS = 300_000;
+// ============================================================================
+// Errors
+// ============================================================================
+/** Error thrown when the Tavily usage API rate limit is exceeded */
+export class RateLimitError extends Error {
+    retryAfterMs;
+    constructor(retryAfterMs) {
+        super(`Tavily usage API rate limited; retry after ${retryAfterMs}ms`);
+        this.name = "RateLimitError";
+        this.retryAfterMs = retryAfterMs;
+    }
+}
+// ============================================================================
+// Utilities
+// ============================================================================
+/**
+ * Parse the HTTP Retry-After header to milliseconds.
+ * Tavily returns the value as decimal integer seconds (e.g., "60").
+ */
+function parseRetryAfter(retryAfterHeader) {
+    if (!retryAfterHeader) {
+        return DEFAULT_RETRY_AFTER_MS;
+    }
+    const seconds = parseInt(retryAfterHeader.trim(), 10);
+    return isNaN(seconds) ? DEFAULT_RETRY_AFTER_MS : Math.max(seconds * 1000, 0);
+}
+// ============================================================================
+// API Client
+// ============================================================================
+/**
+ * Fetch Tavily usage data from the API
+ * @returns {Promise<TavilyUsageData | undefined>} Usage data or undefined if API returns empty/invalid response
+ * @throws {Error} If the API key is missing, the request fails, or the response is malformed
+ * @note Tavily may return 202 with empty body for valid keys without usage history yet
+ */
+export async function getTavilyUsage(apiKey) {
+    if (!apiKey) {
+        throw new Error("TAVILY_API_KEY is not set. " + 'Please set it with: export TAVILY_API_KEY="your-api-key"');
+    }
+    const response = await fetch(TAVILY_USAGE_API_URL, {
+        headers: {
+            Authorization: `Bearer ${apiKey}`,
+        },
+    });
+    if (!response.ok) {
+        if (response.status === 429) {
+            const retryAfterHeader = response.headers.get("retry-after");
+            const retryAfterMs = parseRetryAfter(retryAfterHeader);
+            throw new RateLimitError(retryAfterMs);
+        }
+        throw new Error(`Tavily usage API request failed with status ${response.status}`);
+    }
+    const body = await response.text();
+    // Tavily sometimes returns 202 Accepted with empty body (no usage data yet)
+    if (!body) {
+        return undefined;
+    }
+    let data;
+    try {
+        data = JSON.parse(body);
+    }
+    catch {
+        // Non-JSON response (e.g., HTML from a proxy) — skip silently
+        return undefined;
+    }
+    if (!data.account || typeof data.account.plan_usage !== "number") {
+        throw new Error("Unexpected Tavily usage API response: missing account usage data");
+    }
+    if (typeof data.account.plan_limit !== "number") {
+        throw new Error("Unexpected Tavily usage API response: missing account plan limit");
+    }
+    const totalUsage = data.account.plan_usage;
+    const totalLimit = data.account.plan_limit + (data.account.paygo_limit ?? 0);
+    const percentage = (totalUsage / (totalLimit || 1)) * 100;
+    return {
+        percentage,
+        planUsage: data.account.plan_usage,
+        planLimit: data.account.plan_limit,
+        paygoUsage: data.account.paygo_usage ?? 0,
+        paygoLimit: data.account.paygo_limit ?? 0,
+        keyUsage: data.key?.usage ?? 0,
+        keyLimit: data.key?.limit ?? 0,
+    };
+}
+//# sourceMappingURL=api.js.map
