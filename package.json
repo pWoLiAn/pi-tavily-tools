@@ -37,8 +37,8 @@
     "LICENSE"
   ],
   "peerDependencies": {
-    "@earendil-works/pi-coding-agent": "*",
     "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-coding-agent": "*",
     "@earendil-works/pi-tui": "*",
     "@sinclair/typebox": "*"
   },
@@ -85,7 +85,7 @@
     "typescript": "6.0.3"
   },
   "dependencies": {
-    "@tavily/core": "0.7.3",
+    "@tavily/core": "0.7.2",
     "temporal-polyfill": "0.3.2"
   }
 }
