@@ -22,10 +22,10 @@ export class UsageCache {
         let status;
         if (usageData) {
             const displayPercentage = Math.round(usageData.percentage * 10) / 10;
-            status = theme.fg("muted", "web:") + theme.fg("accent", `${displayPercentage}%`);
+            status = theme.fg("muted", "🔍:") + theme.fg("accent", `${displayPercentage}%`);
         }
         else {
-            status = theme.fg("muted", "web:") + theme.fg("accent", "N/A");
+            status = theme.fg("muted", "🔍:") + theme.fg("accent", "N/A");
         }
         ctx.ui.setStatus("tavily-usage", status);
     }
